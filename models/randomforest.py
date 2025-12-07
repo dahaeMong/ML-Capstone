@@ -1,81 +1,92 @@
 # -------------------------------
-# Randomforest model for recommendation model
+# RandomForest + Preprocessing
 # -------------------------------
 
-
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import numpy as np
+from scripts.preprocessing import load_and_preprocess
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
 # -------------------------------
 # 1. Load preprocessed data
 # -------------------------------
-df = pd.read_csv("data/match_sample_preprocessed.csv")
+X_train, X_test, y_train, y_test, preprocessor, label_encoder = load_and_preprocess()
 
 # -------------------------------
-# 2. Define features & target
-# -------------------------------
-feature_cols = [col for col in df.columns if col not in ["match_id", "player", "map", "agent", "win"]]
-X = df[feature_cols]
-y = df["win"]
-
-# -------------------------------
-# 3. Train/test split
-# -------------------------------
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# -------------------------------
-# 4. Random Forest training
+# 2. Train Random Forest
 # -------------------------------
 rf_model = RandomForestClassifier(n_estimators=200, random_state=42)
 rf_model.fit(X_train, y_train)
 
 # -------------------------------
-# 5. Score accuracy
+# 3. Score accuracy
 # -------------------------------
 y_pred = rf_model.predict(X_test)
 acc = accuracy_score(y_test, y_pred)
 print(f"Random Forest Accuracy: {acc:.2f}")
 
+
 # -------------------------------
-# 6. Recommendation function logic
+# 4. Recommendation function
 # -------------------------------
-def recommend_agent_rf(current_map, current_team_agents):
+def recommend_agent_rf(current_map, current_team_agents, df_raw):
     """
-    Based on current map and team composition
+    Recommend agent using preprocessed model pipeline
     """
-    agents = df["agent"].unique()
+    agents = df_raw["agent"].unique()
+
     best_agent = None
     best_prob = -1
 
     for agent in agents:
-        # generate input data
-        input_dict = {col: 0 for col in feature_cols}
+        # ---------------------------
+        # Build single-row input dict
+        # ---------------------------
+        row = {
+            "kills": 0,
+            "deaths": 0,
+            "assists": 0,
+            "damage": 0,
+            "headshot_pct": 0,
+            "KDA": np.log1p(1.0),  # KDA baseline
+            "map": current_map,
+            "agent_encoded": label_encoder.transform([agent])[0],
+        }
 
-        # map info
-        map_encoded = df.loc[df["map"] == current_map, "map_encoded"].iloc[0]
-        input_dict["map_encoded"] = map_encoded
+        # teammates (binary columns)
+        for teammate in current_team_agents:
+            if teammate in df_raw.columns:
+                row[teammate] = 1
+            else:
+                row[teammate] = 0
 
-        # target agen encoding
-        agent_encoded = df.loc[df["agent"] == agent, "agent_encoded"].iloc[0]
-        input_dict["agent_encoded"] = agent_encoded
+        input_df = pd.DataFrame([row])
 
-        # iterate through agents list to calculate win rate
-        for t_agent in current_team_agents:
-            if t_agent in df.columns:
-                input_dict[t_agent] = 1
+        # ----------------------------------
+        # Apply preprocessing (same as train)
+        -----------------------------------
+        input_processed = preprocessor.transform(input_df)
 
-        input_df = pd.DataFrame([input_dict])
-        prob = rf_model.predict_proba(input_df)[:, 1][0]  # win rate
+        # ----------------------------------
+        # Predict win probability
+        # ----------------------------------
+        prob = rf_model.predict_proba(input_processed)[0][1]
+
         if prob > best_prob:
             best_prob = prob
             best_agent = agent
 
     return best_agent, best_prob
 
+
 # -------------------------------
-# 7. Test run
+# 5. Test run
 # -------------------------------
-recommended_agent, win_prob = recommend_agent_rf("Ascent", ["Jett", "Sage", "Reyna", "Omen"])
+df_raw = pd.read_csv("data/match_sample_preprocessed.csv")
+
+recommended_agent, win_prob = recommend_agent_rf(
+    "Ascent", ["Jett", "Cypher", "Reyna", "Omen"], df_raw
+)
+
 print(f"Recommended Agent: {recommended_agent}, Predicted Win Probability: {win_prob*100:.2f} %")

@@ -78,7 +78,7 @@ def recommend_agent(current_map, current_team_agents, df, model, feature_cols):
 # -------------------------------
 recommended_agent, win_prob = recommend_agent(
     current_map="Ascent",
-    current_team_agents=["Jett", "Sage", "Omen", "Yoru"],
+    current_team_agents=["Jett", "Sage", "Omen", "Reyna"],
     df=df,
     model=model,
     feature_cols=feature_cols

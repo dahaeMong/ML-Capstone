@@ -77,3 +77,43 @@ This project implements a **player-centric agent recommendation system** for Val
 - Generates predicted win probabilities for recommendation
 - Hyperparameters optimized for small dataset
 
+### eda.py result
+=== Basic Statistics ===
+         match_id       kills      deaths     assists      damage  headshot_pct  ...        Veto       Viper      Waylay        Yoru         win         KDA
+count  100.000000  100.000000  100.000000  100.000000  100.000000     100.00000  ...  100.000000  100.000000  100.000000  100.000000  100.000000  100.000000
+mean    50.500000   16.690000   15.920000    6.800000  198.300000      23.10500  ...    0.230000    0.230000    0.180000    0.230000    0.460000    1.794542
+std     29.011492    6.949595    5.936839    4.417596   60.014561       6.82678  ...    0.422953    0.422953    0.386123    0.422953    0.500908    1.212430
+min      1.000000    5.000000    5.000000    0.000000  100.000000      10.20000  ...    0.000000    0.000000    0.000000    0.000000    0.000000    0.444444
+25%     25.750000   11.000000   11.000000    3.000000  144.750000      17.70000  ...    0.000000    0.000000    0.000000    0.000000    0.000000    1.097727
+50%     50.500000   16.000000   16.000000    7.000000  211.000000      23.85000  ...    0.000000    0.000000    0.000000    0.000000    0.000000    1.398026
+75%     75.250000   21.250000   21.000000   10.250000  241.000000      28.15000  ...    0.000000    0.000000    0.000000    0.000000    1.000000    2.203571
+max    100.000000   30.000000   25.000000   15.000000  300.000000      34.40000  ...    1.000000    1.000000    1.000000    1.000000    1.000000    6.800000
+
+[8 rows x 32 columns]
+
+=== Categorical Value Counts ===
+map       agent
+Fracture  Viper        3
+Bind      Breach       2
+Breeze    Omen         2
+Sunset    Clove        2
+Pearl     Tejo         2
+                      ..
+Sunset    Brimstone    1
+          Cypher       1
+          Iso          1
+          Phoenix      1
+          Waylay       1
+Name: count, Length: 82, dtype: int64
+
+📝 Analysis: Overall win rate is 46.0%. Class balance looks okay.
+
+📝 Analysis: Map-wise win rate indicates which maps are more favorable.
+
+📝 Analysis: Agent-wise win rate can show which agents perform better on average.
+
+📝 Analysis: KDA ranges from 0.44 to 6.80, mean 1.79.
+
+📝 Analysis: Headshot % ranges from 10.2% to 34.4%, mean 23.1%.
+
+📝 Analysis: Correlation matrix shows relationships among KDA, headshot %, and win. Higher KDA/headshot % may correlate with higher win probability.

@@ -79,7 +79,7 @@ def recommend_agent(current_map_encoded, current_team_agents_onehot):
 # 8. Test run
 # -------------------------------
 team_onehot = pd.Series({col:0 for col in X.columns if col not in ["map_encoded","agent_encoded"]})
-for agent in ["Jett","Sage","Reyna","Omen"]:
+for agent in ["Jett","Cypher","Reyna","Omen"]:
     if agent in team_onehot.index:
         team_onehot[agent] = 1
 

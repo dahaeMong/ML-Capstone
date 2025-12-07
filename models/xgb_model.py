@@ -1,45 +1,35 @@
+# ===============================
+# XGBoost + Preprocessing Pipeline
+# ===============================
+
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
+import numpy as np
+from scripts.preprocessing import load_and_preprocess
 from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 
 # -------------------------------
 # 1. Load preprocessed data
 # -------------------------------
-df = pd.read_csv("data/match_sample_preprocessed.csv")
+X_train, X_test, y_train, y_test, preprocessor, label_encoder = load_and_preprocess()
 
 # -------------------------------
-# 2. Define features & target
-# -------------------------------
-feature_cols = [col for col in df.columns if col not in ["match_id", "player", "map", "agent", "win"]]
-X = df[feature_cols]
-y = df["win"]
-
-# -------------------------------
-# 3. Train/test split
-# -------------------------------
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# -------------------------------
-# 4. XGBoost Model
+# 2. Train XGBoost
 # -------------------------------
 model = XGBClassifier(
-    n_estimators=200,       # Tree number
-    learning_rate=0.05,     
-    max_depth=5,            
-    subsample=0.8,          
-    colsample_bytree=0.8,   
+    n_estimators=200,
+    learning_rate=0.05,
+    max_depth=5,
+    subsample=0.8,
+    colsample_bytree=0.8,
     random_state=42,
     eval_metric="logloss"
 )
 
-# -------------------------------
-# 5. Train model
-# -------------------------------
 model.fit(X_train, y_train)
 
 # -------------------------------
-# 6. Evaluate performance
+# 3. Evaluate model
 # -------------------------------
 y_pred = model.predict(X_test)
 y_pred_prob = model.predict_proba(X_test)[:, 1]
@@ -50,38 +40,51 @@ f1 = f1_score(y_test, y_pred)
 
 print(f"✅ XGBoost Accuracy: {acc:.3f}")
 print(f"✅ XGBoost AUC: {auc:.3f}")
-print(f"✅ XGBoost F1-Score: {f1:.3f}")
+print(f"✅ XGBoost F1 Score: {f1:.3f}")
+
 
 # -------------------------------
-# 7. Recommendation function
+# 4. Recommendation Function
 # -------------------------------
-def recommend_agent(current_map, current_team_agents, df, model):
+def recommend_agent_xgb(current_map, current_team_agents, df_raw):
     """
-    Based on current map and team composition, XGBoost recommand highest win rate agent
+    Recommend best agent based on XGBoost + preprocessing.
     """
-    # map info
-    all_agents = df["agent"].unique()
+    all_agents = df_raw["agent"].unique()
     best_agent = None
     best_prob = -1
 
     for agent in all_agents:
-        input_dict = {col: 0 for col in feature_cols}
 
-        # map info
-        if "map_encoded" in feature_cols:
-            input_dict["map_encoded"] = df.loc[df["map"] == current_map, "map_encoded"].iloc[0]
+        # -----------------------------
+        # Construct 1-row input feature
+        # -----------------------------
+        row = {
+            "kills": 0,
+            "deaths": 0,
+            "assists": 0,
+            "damage": 0,
+            "headshot_pct": 0,
+            "KDA": np.log1p(1.0),
+            "map": current_map,
+            "agent_encoded": label_encoder.transform([agent])[0],
+        }
 
-        # team composition
-        for t_agent in current_team_agents:
-            if t_agent in feature_cols:
-                input_dict[t_agent] = 1
+        # teammate binary columns
+        for tm in current_team_agents:
+            row[tm] = 1
 
-        # current candidate agent
-        if agent in feature_cols:
-            input_dict[agent] = 1
+        input_df = pd.DataFrame([row])
 
-        input_df = pd.DataFrame([input_dict])
-        prob = model.predict_proba(input_df)[:, 1][0]
+        # -----------------------------
+        # Apply preprocessing (same as train)
+        # -----------------------------
+        input_processed = preprocessor.transform(input_df)
+
+        # -----------------------------
+        # Predict win probability
+        # -----------------------------
+        prob = model.predict_proba(input_processed)[0][1]
 
         if prob > best_prob:
             best_prob = prob
@@ -91,7 +94,14 @@ def recommend_agent(current_map, current_team_agents, df, model):
 
 
 # -------------------------------
-# 8. Test recommendation
+# 5. Test Recommendation
 # -------------------------------
-best_agent, win_prob = recommend_agent("Ascent", ["Jett", "Sage", "Reyna", "Omen"], df, model)
-print(f"\n🎯 Recommended Agent (XGBoost): {best_agent}, Predicted Win Probability: {win_prob * 100:.2f} %")
+df_raw = pd.read_csv("data/match_sample_preprocessed.csv")
+
+best_agent, win_prob = recommend_agent_xgb(
+    "Ascent",
+    ["Jett", "Sage", "Reyna", "Omen"],
+    df_raw
+)
+
+print(f"\n🎯 Recommended Agent (XGBoost): {best_agent}, Predicted Win Probability: {win_prob*100:.2f}%")
