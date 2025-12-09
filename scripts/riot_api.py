@@ -19,11 +19,11 @@ def get_puuid(name, tag):
     
     if response.status_code == 200:
         data = response.json()["data"]
-        print(f"✅ Found player: {data['name']}#{data['tag']}")
+        print(f"Found player: {data['name']}#{data['tag']}")
         print(f"PUUID: {data['puuid']}")
         return data["puuid"]
     else:
-        print(f"❌ Error fetching PUUID: {response.status_code}")
+        print(f"Error fetching PUUID: {response.status_code}")
         return None
 
 
@@ -33,10 +33,10 @@ def get_match_history(puuid, region="na", count=5):
     
     if response.status_code == 200:
         data = response.json()["data"]
-        print(f"✅ Retrieved {len(data)} matches.")
+        print(f"Retrieved {len(data)} matches.")
         return data
     else:
-        print(f"❌ Error fetching matches: {response.status_code}")
+        print(f"Error fetching matches: {response.status_code}")
         return None
 
 
@@ -54,4 +54,4 @@ if __name__ == "__main__":
             file_path = "data/match_sample.json"
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(matches, f, indent=4, ensure_ascii=False)
-            print(f"💾 Saved to {file_path}")
+            print(f" Saved to {file_path}")

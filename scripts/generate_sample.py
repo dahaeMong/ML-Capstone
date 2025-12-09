@@ -41,4 +41,4 @@ output_path = "data/match_sample.json"
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump(sample_data, f, indent=4, ensure_ascii=False)
 
-print(f"✅ Generated {len(sample_data)} matches and saved to {output_path}")
+print(f"Generated {len(sample_data)} matches and saved to {output_path}")
