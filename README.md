@@ -26,22 +26,33 @@ This project implements a **player-centric agent recommendation system** for Val
 
 ## Setup Instructions
 git clone https://github.com/dahaeMong/ML-Capstone
+
 cd ML_CAPSTONE
+
 pip install -r requirements.txt
+
 (optional) python scripts/generate_sample.py - only if you want to regenerate synthetic data
+
 python scripts/preprocessing.py
+
 python scripts/train.py
+
 python scripts/evaluation.py
+
 python scripts/recommend.py
 
 ## Example Run
 
 Map? bind
+
 Team composition (comma separated, e.g., Jett,Sage,Reyna,Omen)? jett,sage,reyna,omen
 
 Recommended Agents:
+
 Logistic Regression: Phoenix (Predicted Win Probability: 53.54%)
+
 Random Forest: Yoru (Predicted Win Probability: 53.96%)
+
 XGBoost: Phoenix (Predicted Win Probability: 57.74%)
 
 
